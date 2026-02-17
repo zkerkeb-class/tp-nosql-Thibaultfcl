@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex - Découvrez tous les Pokémon</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">Pokédex</div>
+            <div class="nav-links">
+                <a href="#" onclick="showSection('pokedex')">Pokédex</a>
+                <a href="#" onclick="showSection('favorites')" id="favoritesLink" style="display:none;">Mes Favoris</a>
+                <a href="#" onclick="showSection('teams')" id="teamsLink" style="display:none;">Mes Équipes</a>
+                <a href="#" onclick="showSection('stats')">Statistiques</a>
+                <div id="authButtons">
+                    <button class="btn btn-secondary" onclick="showSection('login')">Connexion</button>
+                    <button class="btn btn-primary" onclick="showSection('register')">S'inscrire</button>
+                </div>
+                <div id="userInfo" style="display:none;">
+                    <span id="username"></span>
+                    <button class="btn btn-secondary" onclick="logout()">Déconnexion</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Pokédex Section -->
+        <section id="pokedex" class="section active">
+            <div class="search-section">
+                <div class="search-bar">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un Pokémon...">
+                    <button class="btn btn-primary" onclick="searchPokemons()">Rechercher</button>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Trier par</label>
+                        <select class="filter-select" id="sortSelect" onchange="loadPokemons()">
+                            <option value="id">Numéro</option>
+                            <option value="name.english">Nom (A-Z)</option>
+                            <option value="-base.HP">PV (décroissant)</option>
+                            <option value="-base.Attack">Attaque (décroissant)</option>
+                            <option value="-base.Defense">Défense (décroissant)</option>
+                            <option value="-base.Speed">Vitesse (décroissant)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Pokémon par page</label>
+                        <select class="filter-select" id="limitSelect" onchange="loadPokemons()">
+                            <option value="12">12</option>
+                            <option value="24">24</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Filtrer par type</label>
+                    <div class="type-filters" id="typeFilters"></div>
+                </div>
+            </div>
+
+            <!-- Team selector (only visible when logged in) -->
+            <div id="teamSelector" style="display:none;">
+                <div>
+                    <label>👥 Ajouter à l'équipe :</label>
+                    <select id="currentTeamSelect">
+                        <option value="">-- Aucune équipe sélectionnée --</option>
+                    </select>
+                    <span id="teamPokemonCount"></span>
+                </div>
+            </div>
+
+            <div class="pokemon-grid" id="pokemonGrid"></div>
+
+            <div class="pagination">
+                <button class="page-btn" id="prevBtn" onclick="prevPage()">← Précédent</button>
+                <span class="page-info" id="pageInfo"></span>
+                <button class="page-btn" id="nextBtn" onclick="nextPage()">Suivant →</button>
+            </div>
+        </section>
+
+        <!-- Login Section -->
+        <section id="login" class="section">
+            <div class="auth-form">
+                <h2 style="margin-bottom: 1.5rem; text-align: center;">Connexion</h2>
+                <div id="loginError"></div>
+                <form onsubmit="login(event)">
+                    <div class="form-group">
+                        <label>Nom d'utilisateur</label>
+                        <input type="text" id="loginUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mot de passe</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Se connecter</button>
+                </form>
+                <p style="text-align: center; margin-top: 1rem;">
+                    Pas de compte ? <a href="#" onclick="showSection('register')">S'inscrire</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- Register Section -->
+        <section id="register" class="section">
+            <div class="auth-form">
+                <h2 style="margin-bottom: 1.5rem; text-align: center;">Inscription</h2>
+                <div id="registerError"></div>
+                <form onsubmit="register(event)">
+                    <div class="form-group">
+                        <label>Nom d'utilisateur</label>
+                        <input type="text" id="registerUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mot de passe</label>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Créer un compte</button>
+                </form>
+                <p style="text-align: center; margin-top: 1rem;">
+                    Déjà un compte ? <a href="#" onclick="showSection('login')">Se connecter</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- Favorites Section -->
+        <section id="favorites" class="section">
+            <h2 style="margin-bottom: 1.5rem;">Mes Pokémon Favoris</h2>
+            <div class="pokemon-grid" id="favoritesGrid"></div>
+        </section>
+
+        <!-- Teams Section -->
+        <section id="teams" class="section">
+            <h2 style="margin-bottom: 1.5rem;">Mes Équipes Pokémon</h2>
+            
+            <div class="team-form">
+                <h3 style="margin-bottom: 1rem;">Créer une nouvelle équipe</h3>
+                <div id="teamError"></div>
+                <form onsubmit="createTeam(event)">
+                    <div class="form-group">
+                        <label>Nom de l'équipe</label>
+                        <input type="text" id="teamName" required placeholder="Ex: Mon équipe de feu">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Créer l'équipe</button>
+                </form>
+                <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    💡 Astuce : Vous pourrez ajouter des Pokémon à vos équipes depuis la page Pokédex
+                </p>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem;">Mes équipes</h3>
+            <div class="teams-grid" id="teamsGrid"></div>
+        </section>
+
+        <!-- Stats Section -->
+        <section id="stats" class="section">
+            <h2 style="margin-bottom: 1.5rem;">Statistiques Pokémon</h2>
+            <div id="statsContent"></div>
+        </section>
+    </div>
+
+    <!-- Modal for Pokemon Details -->
+    <div id="pokemonModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
